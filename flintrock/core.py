@@ -651,23 +651,8 @@ def setup_node(
             localpath=os.path.join(SCRIPTS_DIR, 'setup-ephemeral-storage.py'),
             remotepath='/tmp/setup-ephemeral-storage.py')
 
-    logger.info("[{h}] Configuring ephemeral storage...".format(h=host))
-    # TODO: Print some kind of warning if storage is large, since formatting
-    #       will take several minutes (~4 minutes for 2TB).
-    storage_dirs_raw = ssh_check_output(
-        client=ssh_client,
-        command="""
-            set -e
-            python /tmp/setup-ephemeral-storage.py
-            rm -f /tmp/setup-ephemeral-storage.py
-        """)
-    storage_dirs = json.loads(storage_dirs_raw)
-
-    cluster.storage_dirs.root = storage_dirs['root']
-    cluster.storage_dirs.ephemeral = storage_dirs['ephemeral']
-
-    # TODO: Move Python and Java setup to new service under services.py.
-    #       New service to cover Python/Scala/Java: LanguageRuntimes (name?)
+    # Some newer images ship with python3 but no `python` shim. Install
+    # python3 before we run any remote helper scripts.
     ssh_check_output(
         client=ssh_client,
         command=(
@@ -677,6 +662,22 @@ def setup_node(
             """
         )
     )
+
+    logger.info("[{h}] Configuring ephemeral storage...".format(h=host))
+    # TODO: Print some kind of warning if storage is large, since formatting
+    #       will take several minutes (~4 minutes for 2TB).
+    storage_dirs_raw = ssh_check_output(
+        client=ssh_client,
+        command="""
+            set -e
+            python3 /tmp/setup-ephemeral-storage.py
+            rm -f /tmp/setup-ephemeral-storage.py
+        """)
+    storage_dirs = json.loads(storage_dirs_raw)
+
+    cluster.storage_dirs.root = storage_dirs['root']
+    cluster.storage_dirs.ephemeral = storage_dirs['ephemeral']
+
     ensure_java(ssh_client, java_version)
 
     for service in services:

@@ -180,7 +180,7 @@ class HDFS(FlintrockService):
             command="""
                 set -e
 
-                python /tmp/download-package.py "{download_source}" "hadoop"
+                python3 /tmp/download-package.py "{download_source}" "hadoop"
 
                 for f in $(find hadoop/bin -type f -executable -not -name '*.cmd'); do
                     sudo ln -s "$(pwd)/$f" "/usr/local/bin/$(basename $f)"
@@ -364,7 +364,7 @@ class Spark(FlintrockService):
             ssh_check_output(
                 client=ssh_client,
                 command="""
-                    python /tmp/download-package.py "{download_source}" "spark"
+                    python3 /tmp/download-package.py "{download_source}" "spark"
                 """.format(
                     # version=self.version,
                     download_source=self.download_source.format(v=self.version),
